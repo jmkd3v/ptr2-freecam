@@ -68,6 +68,7 @@ local Controls = {
 	Rotate_Left		= VK_J,
 	Rotate_Right	= VK_L,
 	Exit			= VK_U,
+    MouseSet        = VK_O,
 	FOV_In			= VK_ADD,
 	FOV_Out			= VK_SUBTRACT
 }
@@ -76,6 +77,11 @@ local LogTypes = {
 	Info = "JMK_INFO",
 	Warning = "JMK_WARNING",
 	Error = "JMK_ERROR"
+}
+
+local Data = {
+	RootPosX = 700,
+    RootPosY = 700
 }
 
 local Functions = {}
@@ -96,8 +102,8 @@ end
 Functions["Root"] = function()
 	while(true) do
 	local X, Y = getMousePos()
-	X = X - 512
-	Y = Y - 512
+	X = X - Data.RootPosX
+	Y = Y - Data.RootPosY
 	if isKeyPressed(Controls.Exit) then
 		Functions.Log("JMK Freecam Ended", LogTypes.Info)
 		Threads["RootThread"]:suspend()
@@ -127,7 +133,7 @@ Functions["Root"] = function()
 	   readFloat(Addresses.Rotate_Z) + (X)
 	 )
 	sleep(Options.Speed_Delay)
-	setMousePos(512, 512)
+	setMousePos(Data.RootPosX, Data.RootPosY)
 	end
 end
 
@@ -140,7 +146,6 @@ Functions["RunThreads"] = function()
 end
 
 Functions["Main"] = function()
-	setMousePos(512, 512)
 	Functions.Log("JMK PTR2 Freecam Started", LogTypes.Info)
 	Functions.Log("Version " .. Version, LogTypes.Info)
 	Functions["InitializeThreads"]()
