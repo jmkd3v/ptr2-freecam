@@ -1,4 +1,12 @@
 --[[
+	_			_		__
+   (_)		   | |	   / _|
+	_ _ __ ___ | | __ | |_ _ __ ___	 ___  ___ __ _ _ __ ___
+   | | '_ ` _ \| |/ / |	 _| '__/ _ \/ _ \/ __/ _` | '_ ` _ \
+   | | | | | | |   <  | | | | |	 __/  __/ (_| (_| | | | | | |
+   | |_| |_| |_|_|\_\ |_| |_|  \___|\___|\___\__,_|_| |_| |_|
+  _/ |
+ |__/
 
 JMK Freecam
 for PaRappa The Rapper 2
@@ -57,7 +65,7 @@ local Addresses = {
 }
 
 local Options = {
- 	Speed_Delay	= 0.1,
+	Speed_Delay	= 0.1,
 	Speed_Run	= 10000,
 	Speed_FOV	= 0.5
 }
@@ -68,9 +76,15 @@ local Controls = {
 	Rotate_Left		= VK_J,
 	Rotate_Right	= VK_L,
 	Exit			= VK_U,
-    MouseSet        = VK_O,
+	MouseSet		= VK_O,
 	FOV_In			= VK_ADD,
 	FOV_Out			= VK_SUBTRACT
+}
+
+local Messages = {
+	Startup = "JMK PTR2 Freecam Loaded",
+	VersionPrefix = "Version ",
+
 }
 
 local LogTypes = {
@@ -81,7 +95,7 @@ local LogTypes = {
 
 local Data = {
 	RootPosX = 700,
-    RootPosY = 700
+	RootPosY = 700
 }
 
 local Functions = {}
@@ -146,8 +160,8 @@ Functions["RunThreads"] = function()
 end
 
 Functions["Main"] = function()
-	Functions.Log("JMK PTR2 Freecam Started", LogTypes.Info)
-	Functions.Log("Version " .. Version, LogTypes.Info)
+	Functions.Log(Messages.Startup, LogTypes.Info)
+	Functions.Log(Messages.VersionPrefix .. Version, LogTypes.Info)
 	Functions["InitializeThreads"]()
 	Functions["RunThreads"]()
 end
