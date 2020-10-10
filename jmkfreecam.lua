@@ -94,7 +94,7 @@ local Controls = {
 	Rotate_Right		= VK_L,
 	
 	Exit				= VK_U,
-    MouseSet			= VK_O,
+	MouseSet			= VK_O,
 	
 	FOV_In				= VK_ADD,
 	FOV_Out				= VK_SUBTRACT,
