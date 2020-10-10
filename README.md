@@ -20,8 +20,8 @@ NTSC-U
 https://jmksite.dev/
 
 ### Requirements:
-	- PCSX2
-	- Cheat Engine
+- PCSX2
+- Cheat Engine
 
 ### License:
 This program is free software: you can redistribute it and/or modify
