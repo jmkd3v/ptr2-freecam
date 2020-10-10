@@ -1,10 +1,10 @@
 --[[
-	_			_		__
-   (_)		   | |	   / _|
-	_ _ __ ___ | | __ | |_ _ __ ___	 ___  ___ __ _ _ __ ___
-   | | '_ ` _ \| |/ / |	 _| '__/ _ \/ _ \/ __/ _` | '_ ` _ \
-   | | | | | | |   <  | | | | |	 __/  __/ (_| (_| | | | | | |
-   | |_| |_| |_|_|\_\ |_| |_|  \___|\___|\___\__,_|_| |_| |_|
+    _           _          __
+   (_)         | |        / _|
+    _ _ __ ___ | | __    | |_ _ __ ___  ___  ___ __ _ _ __ ___
+   | | '_ ` _ \| |/ /    |  _| '__/ _ \/ _ \/ __/ _` | '_ ` _ \
+   | | | | | | |   <     | | | | |  __/  __/ (_| (_| | | | | | |
+   | |_| |_| |_|_|\_\    |_| |_|  \___|\___|\___\__,_|_| |_| |_|
   _/ |
  |__/
 
@@ -13,7 +13,7 @@ for PaRappa The Rapper 2
 
 NTSC-U
 
-© Copyright 2020 JMK 
+© Copyright 2020 JMK
 
 https://jmksite.dev/
 
@@ -36,6 +36,8 @@ License:
 	along with this program.	If not, see <https://www.gnu.org/licenses/>.
 
 How To Use:
+	tl;dr: You just NOP the addresses and then press the Execute Script button.
+	
 	1. "Unlock" all addresses used below in the Addresses array.
 		To do this, repeat the following steps for every address listed:
 		View the address in Cheat Engine, right click on each one,
@@ -51,40 +53,56 @@ How To Use:
 		Cheat Table window.
 	4. Done! To use the program, read the controls listed in the Controls array.
 
-Join the PaRappa The Rapper 2 Discord Server at https://discord.gg/xpvVnYd
+Join the PaRappa The Rapper 2 Modding Discord Server at https://discord.gg/xpvVnYd
 
 ]]
 
-local Version = "b0"
+local Version = "b3"
 
 local Addresses = {
-	Rotate_X	= 0x21C7B514,
-	Rotate_Z	= 0x21C7B510,
-	Rotate_Tilt	= 0x21C7B520,
-	FOV			= 0x21C7B508
+	Rotate_Horizontal	= 0x21C7B514,
+	Rotate_Vertical		= 0x21C7B510,
+	Rotate_Tilt			= 0x21C7B520,
+	FOV					= 0x21C7B508
 }
 
+--[[
+local Opcodes = {
+	Rotate				= {
+		Address			= "301283F7",
+		Length			= 8
+	},
+	Tilt				= {
+		Address			= "30158025",
+		Length			= 4
+	},
+	FOV					= {
+		Address			= "3012828B",
+		Length			= 4
+	}
+}
+]]
+
 local Options = {
-	Speed_Delay	= 0.1,
-	Speed_Run	= 10000,
-	Speed_FOV	= 0.5
+	Speed				= 1
 }
 
 local Controls = {
-	Rotate_Forward	= VK_I,
-	Rotate_Backward	= VK_K,
-	Rotate_Left		= VK_J,
-	Rotate_Right	= VK_L,
-	Exit			= VK_U,
-	MouseSet		= VK_O,
-	FOV_In			= VK_ADD,
-	FOV_Out			= VK_SUBTRACT
+	Rotate_Forward		= VK_I,
+	Rotate_Backward		= VK_K,
+	Rotate_Left			= VK_J,
+	Rotate_Right		= VK_L,
+	
+	Exit				= VK_U,
+    MouseSet			= VK_O,
+	
+	FOV_In				= VK_ADD,
+	FOV_Out				= VK_SUBTRACT,
 }
 
 local Messages = {
 	Startup = "JMK PTR2 Freecam Loaded",
 	VersionPrefix = "Version ",
-
 }
 
 local LogTypes = {
@@ -94,14 +112,29 @@ local LogTypes = {
 }
 
 local Data = {
-	RootPosX = 700,
-	RootPosY = 700
+	--[[
+		By default the mouse's RootPos is set to the exact center of the screen.
+		If you are playing PTR2 in Windowed mode, you may want to set this to somewhere
+		within the window.
+	]]
+	
+	RootPosX = getScreenWidth() / 2,
+	RootPosY = getScreenHeight() / 2
 }
 
 local Functions = {}
 local Threads = {}
 
 Functions["Log"] = function(LogString, LogType)
+	--[[
+	
+	📃 Log
+	
+	📄 Description:
+	This function outputs "styled" text to the console.
+	
+	]]
+	
 	if LogType == LogTypes.Info then
 		print("ℹ️ " .. LogString)
 	elseif LogType == LogTypes.Warning then
@@ -113,56 +146,147 @@ Functions["Log"] = function(LogString, LogType)
 	end
 end
 
-Functions["Root"] = function()
-	while(true) do
-	local X, Y = getMousePos()
-	X = X - Data.RootPosX
-	Y = Y - Data.RootPosY
-	if isKeyPressed(Controls.Exit) then
-		Functions.Log("JMK Freecam Ended", LogTypes.Info)
-		Threads["RootThread"]:suspend()
-	end
+Functions["Nop"] = function(Address, Length)
+	--[[
 	
-	if isKeyPressed(Controls.FOV_In) then
-	   writeFloat(
-		Addresses.FOV,
-		readFloat(Addresses.FOV) + Options.Speed_FOV
-	   )
+	🚫 Nop
+	
+	📄 Description:
+	This function NOPs specific opcodes.
+	
+	]]
+	
+	local OpcodeAsm = [[
+	]] .. Address .. [[:
+	nop ]] .. tostring(Length) .. [[
+	]]
+	autoAssemble(OpcodeAsm)
+end
+
+Functions["Root"] = function()
+	--[[
+	
+	💎 Root
+	
+	📄 Description:
+	This function runs the mainloop for camera movement.
+	
+	]]
+	
+	while(true) do
+		local X, Y = getMousePos()
+		X = X - Data.RootPosX
+		Y = Y - Data.RootPosY
+		if isKeyPressed(Controls.Exit) then
+			Functions.Log("JMK Freecam Ended", LogTypes.Info)
+			Threads["RootThread"]:suspend()
+		end
+
+		if isKeyPressed(Controls.FOV_In) then
+			writeFloat(
+				Addresses.FOV,
+				readFloat(Addresses.FOV) + (0.05 * Options.Speed)
+			)
+		end
+
+		if isKeyPressed(Controls.FOV_Out) then
+			writeFloat(
+				Addresses.FOV,
+				readFloat(Addresses.FOV) - (0.05 * Options.Speed)
+			)
+		end
+		
+		writeFloat(
+			Addresses.Rotate_Horizontal,
+			readFloat(Addresses.Rotate_Horizontal) - (Y * Options.Speed)
+		)
+
+		writeFloat(
+			Addresses.Rotate_Vertical,
+			readFloat(Addresses.Rotate_Vertical) + (X * Options.Speed)
+		)
+		
+		sleep(0.5)
+		
+		setMousePos(
+			Data.RootPosX,
+			Data.RootPosY
+		)
 	end
+end
 
-	if isKeyPressed(Controls.FOV_Out) then
-	   writeFloat(
-		Addresses.FOV,
-		readFloat(Addresses.FOV) - Options.Speed_FOV
-	   )
-	end
-
-	writeFloat(
-	  Addresses.Rotate_X,
-	  readFloat(Addresses.Rotate_X) - (Y)
-	)
-
-	 writeFloat(
-	   Addresses.Rotate_Z,
-	   readFloat(Addresses.Rotate_Z) + (X)
-	 )
-	sleep(Options.Speed_Delay)
-	setMousePos(Data.RootPosX, Data.RootPosY)
+Functions["InitializeOpcodes"] = function()
+	--[[
+	
+	👨‍💻 InitializeOpcodes (Opcodes)
+	
+	📄 Description:
+	This function NOPs all the opcodes for you to skip "How To Use: Part 1".
+	
+	]]
+	
+	for OpcodeName, OpcodeItem in pairs(Opcodes) do
+		Functions.Nop(
+			OpcodeItem.Address,
+			OpcodeItem.Length
+		)
 	end
 end
 
 Functions["InitializeThreads"] = function()
+	--[[
+	
+	🔌 InitializeThreads (Threading)
+	
+	📄 Description:
+	This function initializes the threads to be run by RunThreads.
+	
+	]]
+	
 	Threads["RootThread"] = createThreadSuspended(Functions["Root"])
 end
 
 Functions["RunThreads"] = function()
+	--[[
+	
+	🔌 RunThreads (Threading)
+	
+	📄 Description:
+	This function runs threads created by InitializeThreads.
+	
+	]]
+	
 	Threads["RootThread"]:resume()
 end
 
 Functions["Main"] = function()
-	Functions.Log(Messages.Startup, LogTypes.Info)
-	Functions.Log(Messages.VersionPrefix .. Version, LogTypes.Info)
+	--[[
+	
+	☀ Main
+	
+	📄 Description:
+	This function starts the freecam.
+	
+	]]
+	
+	Functions.Log(
+		Messages.Startup,
+		LogTypes.Info
+	)
+	
+	Functions.Log(
+		Messages.VersionPrefix .. Version,
+		LogTypes.Info
+	)
+	
+	--[[
+	
+	🎛 Initialization
+	
+	]]	
 	Functions["InitializeThreads"]()
+	-- This has been disabled due to address changes.
+	-- Functions["InitializeOpcodes"]()
 	Functions["RunThreads"]()
 end
 
