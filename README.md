@@ -13,7 +13,7 @@
 # JMK Freecam
 ### for PaRappa The Rapper 2
 
-NTSC-U
+NTSC-U (more regions soon!)
 
 © Copyright 2020 JMK
 
