@@ -15,9 +15,9 @@
 
 NTSC-U (more regions soon!)
 
-© Copyright 2020 JMK
+© Copyright 2021 JMK
 
-https://jmksite.dev/
+https://jmk.gg/
 
 ### Requirements:
 - PCSX2
