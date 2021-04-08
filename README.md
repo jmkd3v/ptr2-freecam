@@ -54,5 +54,3 @@ tl;dr: You just NOP the addresses and then press the Execute Script button.
 3. Run the program with the Execute Script button at the bottom of the
 	Cheat Table window.
 4. Done! To use the program, read the controls listed in the Controls array.
-
-#### Join the PaRappa The Rapper 2 Modding Discord Server at https://discord.gg/xpvVnYd
