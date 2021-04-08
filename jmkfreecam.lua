@@ -13,9 +13,9 @@ for PaRappa The Rapper 2
 
 NTSC-U
 
-© Copyright 2020 JMK
+© Copyright 2021 JMK
 
-https://jmksite.dev/
+https://jmk.gg/
 
 Requirements:
 	- PCSX2
@@ -52,8 +52,6 @@ How To Use:
 	3. Run the program with the Execute Script button at the bottom of the
 		Cheat Table window.
 	4. Done! To use the program, read the controls listed in the Controls array.
-
-Join the PaRappa The Rapper 2 Modding Discord Server at https://discord.gg/xpvVnYd
 
 ]]
 
