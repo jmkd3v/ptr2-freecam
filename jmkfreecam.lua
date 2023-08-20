@@ -1,3 +1,4 @@
+
 --[[
 
 PaRappa The Rapper 2 Freecam
@@ -26,8 +27,8 @@ License:
 
 How To Use:
 	tl;dr: You just NOP the addresses and then press the Execute Script button.
-	
-	1. "Unlock" all addresses used below in the Addresses array.
+
+	1. "Unlock" any addresses you need in the AddressesNeeded array.
 		To do this, repeat the following steps for every address listed:
 		View the address in Cheat Engine, right click on each one,
 		press the "F6" key or click "Find out what writes to this address".
@@ -44,13 +45,38 @@ How To Use:
 
 ]]
 
-local Version = "b3"
+--[[
+TODO:
+     - Reset camera to position its suppsoed to be
+     - Automatically "Unlock" the values
+
+]]
+
+-- Tilt (0x21C7B520) can break in cutscenes.
+-- keep the opcode write window up for the entire time and replace every opcode that shows up with a NOP to enable tilt.
+-- If you do not choose to enable tilt, do not unlock 0x21C7B520.
+-- If the viewport goes upside down after resetting from this, change the fov
+
+-- These are all the addresses you need to actually unlock
+local AddressesNeeded = {
+      0x21C7B510, -- If you want Rotation
+      0x21C7B520, -- If you want Tilt, Not reccommended. Read Lines 55 to 58
+      0x21C7B500, -- If you want Position
+      0x21C7B534 -- If you want FOV
+}
+
+local Version = "6"
 
 local Addresses = {
 	Rotate_Horizontal	= 0x21C7B514,
-	Rotate_Vertical		= 0x21C7B510,
-	Rotate_Tilt			= 0x21C7B520,
-	FOV					= 0x21C7B508
+	Rotate_Vertical	        = 0x21C7B510,
+        Rotate_WhateverThisIs	= 0x21C7B518,
+        Rotate_Tilt		= 0x21C7B520,
+        X			= 0x21C7B500,
+        Y			= 0x21C7B504,
+        Z		        = 0x21C7B508,
+        FOV                     = 0x21C7B534,
+        CityHall                = 0x20382508
 }
 
 --[[
@@ -75,16 +101,29 @@ local Options = {
 }
 
 local Controls = {
-	Rotate_Forward		= VK_I,
-	Rotate_Backward		= VK_K,
-	Rotate_Left			= VK_J,
-	Rotate_Right		= VK_L,
-	
-	Exit				= VK_U,
-	MouseSet			= VK_O,
-	
-	FOV_In				= VK_ADD,
-	FOV_Out				= VK_SUBTRACT,
+	Move_Forward		= VK_W,
+	Move_Backward		= VK_S,
+	Move_Left		= VK_A,
+	Move_Right		= VK_D,
+	Move_Up			= VK_Q,
+	Move_Down		= VK_E,
+
+        Tilt_Up			= VK_V,
+	Tilt_Down		= VK_N,
+        WeirdRotUp              = VK_T,
+        WeirdRotDown            = VK_G,
+
+	Exit			= VK_X,
+        ResetAllCamera          = VK_R,
+        Invert_Speed            = VK_I,
+        DeInvert_Speed          = VK_O,
+        ResetTilt               = VK_B,
+
+	FOV_In			= VK_Z,
+	FOV_Out			= VK_C,
+
+        Speed_Up                = VK_ADD,
+        Speed_Down              = VK_SUBTRACT,
 }
 
 local Messages = {
@@ -104,7 +143,7 @@ local Data = {
 		If you are playing PTR2 in Windowed mode, you may want to set this to somewhere
 		within the window.
 	]]
-	
+
 	RootPosX = getScreenWidth() / 2,
 	RootPosY = getScreenHeight() / 2
 }
@@ -114,14 +153,14 @@ local Threads = {}
 
 Functions["Log"] = function(LogString, LogType)
 	--[[
-	
+
 	📃 Log
-	
+
 	📄 Description:
 	This function outputs "styled" text to the console.
-	
+
 	]]
-	
+
 	if LogType == LogTypes.Info then
 		print("ℹ️ " .. LogString)
 	elseif LogType == LogTypes.Warning then
@@ -135,14 +174,14 @@ end
 
 Functions["Nop"] = function(Address, Length)
 	--[[
-	
+
 	🚫 Nop
-	
+
 	📄 Description:
 	This function NOPs specific opcodes.
-	
+
 	]]
-	
+
 	local OpcodeAsm = [[
 	]] .. Address .. [[:
 	nop ]] .. tostring(Length) .. [[
@@ -150,17 +189,28 @@ Functions["Nop"] = function(Address, Length)
 	autoAssemble(OpcodeAsm)
 end
 
+function clamp(x, min, max)
+    if x < min then return min end
+    if x > max then return max end
+    return x
+end
+
 Functions["Root"] = function()
 	--[[
-	
+
 	💎 Root
-	
+
 	📄 Description:
 	This function runs the mainloop for camera movement.
-	
+
 	]]
-	
+
+    local Speed = Options.Speed
+
+    Functions.Log("To see camera speed ingame. go to the city hall, don't go in, just go to it")
+
 	while(true) do
+
 		local X, Y = getMousePos()
 		X = X - Data.RootPosX
 		Y = Y - Data.RootPosY
@@ -169,32 +219,139 @@ Functions["Root"] = function()
 			Threads["RootThread"]:suspend()
 		end
 
+                if isKeyPressed(Controls.Invert_Speed) then
+			Speed = -math.abs(Speed)
+		end
+
+                if isKeyPressed(Controls.DeInvert_Speed) then
+			Speed = math.abs(Speed)
+		end
+
 		if isKeyPressed(Controls.FOV_In) then
 			writeFloat(
 				Addresses.FOV,
-				readFloat(Addresses.FOV) + (0.05 * Options.Speed)
+				readFloat(Addresses.FOV) - (0.0005 * Speed)
 			)
 		end
 
 		if isKeyPressed(Controls.FOV_Out) then
 			writeFloat(
 				Addresses.FOV,
-				readFloat(Addresses.FOV) - (0.05 * Options.Speed)
+				readFloat(Addresses.FOV) + (0.0005 * Speed)
 			)
 		end
-		
-		writeFloat(
-			Addresses.Rotate_Horizontal,
-			readFloat(Addresses.Rotate_Horizontal) - (Y * Options.Speed)
-		)
+
+                if isKeyPressed(Controls.Move_Left) then
+			writeFloat(
+				Addresses.X,
+				readFloat(Addresses.X) - (0.1 * Speed)
+			)
+		end
+
+                if isKeyPressed(Controls.Move_Right) then
+			writeFloat(
+				Addresses.X,
+				readFloat(Addresses.X) + (0.1 * Speed)
+			)
+		end
+
+                if isKeyPressed(Controls.Move_Forward) then
+			writeFloat(
+				Addresses.Z,
+				readFloat(Addresses.Z) - (0.1 * Speed)
+			)
+		end
+
+                if isKeyPressed(Controls.Move_Backward) then
+			writeFloat(
+				Addresses.Z,
+				readFloat(Addresses.Z) + (0.1 * Speed)
+			)
+		end
+
+                if isKeyPressed(Controls.Move_Up) then
+			writeFloat(
+				Addresses.Y,
+				readFloat(Addresses.Y) + (0.1 * Speed)
+			)
+		end
+
+                if isKeyPressed(Controls.Move_Down) then
+			writeFloat(
+				Addresses.Y,
+				readFloat(Addresses.Y) - (0.1 * Speed)
+			)
+		end
+
+                if isKeyPressed(Controls.Tilt_Up) then
+			writeFloat(
+				Addresses.Rotate_Tilt,
+				readFloat(Addresses.Rotate_Tilt) + (0.001 * Speed)
+			)
+		end
+
+                if isKeyPressed(Controls.Tilt_Down) then
+			writeFloat(
+				Addresses.Rotate_Tilt,
+				readFloat(Addresses.Rotate_Tilt) - (0.001 * Speed)
+			)
+		end
+
+                writeString(
+                    Addresses.CityHall,
+                    "Cam Speed: "..string.sub(Speed,0,4)..", Freecam V"..Version.."@(Tilt buggy, read Line 62)@@@"
+                )
+
+    	        if isKeyPressed(Controls.Speed_Up) then
+                   Speed = clamp(Speed + 0.005,0.002,10)
+		end
+
+                if isKeyPressed(Controls.Speed_Down) then
+		   Speed = clamp(Speed - 0.005,0.002,10)
+		end
+
+		if isKeyPressed(Controls.ResetAllCamera) then
+			writeFloat(Addresses.Rotate_Vertical,0)
+			writeFloat(Addresses.Rotate_Horizontal,0)
+                        writeFloat(Addresses.FOV,70)
+                        Speed = 1
+			writeFloat(Addresses.X,0)
+			writeFloat(Addresses.Y,0)
+			writeFloat(Addresses.Z,0)
+                        writeFloat(Addresses.Rotate_WhateverThisIs,0)
+
+		end
+
+                if isKeyPressed(Controls.ResetTilt) then
+			writeFloat(Addresses.Rotate_Tilt,0)
+		end
+
+                if isKeyPressed(Controls.WeirdRotUp) then
+			writeFloat(
+			        Addresses.Rotate_WhateverThisIs,
+			        readFloat(Addresses.Rotate_WhateverThisIs) + (0.5 * Speed)
+		        )
+		end
+
+                if isKeyPressed(Controls.WeirdRotDown) then
+			writeFloat(
+			        Addresses.Rotate_WhateverThisIs,
+			        readFloat(Addresses.Rotate_WhateverThisIs) - (0.5 * Speed)
+		        )
+		end
 
 		writeFloat(
-			Addresses.Rotate_Vertical,
-			readFloat(Addresses.Rotate_Vertical) + (X * Options.Speed)
+			Addresses.Rotate_Horizontal,
+			readFloat(Addresses.Rotate_Horizontal) - (Y * math.abs(Speed))
 		)
-		
+
+	        writeFloat(
+			Addresses.Rotate_Vertical,
+			readFloat(Addresses.Rotate_Vertical) + (X * Speed)
+		)
+
 		sleep(0.5)
-		
+
 		setMousePos(
 			Data.RootPosX,
 			Data.RootPosY
@@ -204,14 +361,14 @@ end
 
 Functions["InitializeOpcodes"] = function()
 	--[[
-	
+
 	👨‍💻 InitializeOpcodes (Opcodes)
-	
+
 	📄 Description:
 	This function NOPs all the opcodes for you to skip "How To Use: Part 1".
-	
+
 	]]
-	
+
 	for OpcodeName, OpcodeItem in pairs(Opcodes) do
 		Functions.Nop(
 			OpcodeItem.Address,
@@ -222,55 +379,55 @@ end
 
 Functions["InitializeThreads"] = function()
 	--[[
-	
+
 	🔌 InitializeThreads (Threading)
-	
+
 	📄 Description:
 	This function initializes the threads to be run by RunThreads.
-	
+
 	]]
-	
+
 	Threads["RootThread"] = createThreadSuspended(Functions["Root"])
 end
 
 Functions["RunThreads"] = function()
 	--[[
-	
+
 	🔌 RunThreads (Threading)
-	
+
 	📄 Description:
 	This function runs threads created by InitializeThreads.
-	
+
 	]]
-	
+
 	Threads["RootThread"]:resume()
 end
 
 Functions["Main"] = function()
 	--[[
-	
+
 	☀ Main
-	
+
 	📄 Description:
 	This function starts the freecam.
-	
+
 	]]
-	
+
 	Functions.Log(
 		Messages.Startup,
 		LogTypes.Info
 	)
-	
+
 	Functions.Log(
 		Messages.VersionPrefix .. Version,
 		LogTypes.Info
 	)
-	
+
 	--[[
-	
+
 	🎛 Initialization
-	
-	]]	
+
+	]]
 	Functions["InitializeThreads"]()
 	-- This has been disabled due to address changes.
 	-- Functions["InitializeOpcodes"]()
