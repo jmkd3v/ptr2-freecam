@@ -4,7 +4,7 @@ NTSC-U (more regions soon!)
 https://jmk.gg/
 
 ### Requirements:
-- PCSX2
+- PCSX2 1.6 or 17-dev-159
 - Cheat Engine
 
 ### How To Use:
